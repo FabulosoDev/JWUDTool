@@ -44,6 +44,7 @@ public class Main {
     private static final String OPTION_EXTRACT = "extract";
     private static final String OPTION_DEVMODE = "dev";
     private static byte[] commonKey;
+    private static byte[] titleKey;
 
     private static final String HOMEPATH = System.getProperty("user.home") + File.separator + ".wiiu";
 
@@ -74,7 +75,6 @@ public class Main {
         String output = null;
         boolean overwrite = false;
         boolean devMode = false;
-        byte[] titlekey = null;
 
         if (cmd.hasOption(OPTION_HELP)) {
             showHelp(options);
@@ -109,12 +109,15 @@ public class Main {
 
         if (cmd.hasOption(OPTION_TITLEKEY)) {
             String titlekey_string = cmd.getOptionValue(OPTION_TITLEKEY);
-            titlekey = Utils.StringToByteArray(titlekey_string);
-            if (titlekey.length != 0x10) {
-                titlekey = null;
+            Main.titleKey = Utils.StringToByteArray(titlekey_string);
+            if (Main.titleKey.length != 0x10) {
+                Main.titleKey = null;
             } else {
-                System.out.println("Titlekey was set to: " + Utils.ByteArrayToString(titlekey));
+                System.out.println("TitleKey was set to: " + Utils.ByteArrayToString(Main.titleKey));
             }
+        } else {
+            readKey(deriveTitleKeyFromInput(input)).ifPresent(key -> Main.titleKey = key);
+            System.out.println("TitleKey was set to: " + Utils.ByteArrayToString(Main.titleKey));
         }
 
         if (cmd.hasOption(OPTION_OVERWRITE)) {
@@ -153,14 +156,14 @@ public class Main {
             if (cmd.hasOption(OPTION_DECRYPT)) {
                 System.out.println("Decrypting full game partition.");
 
-                decrypt(input, output, devMode, overwrite, titlekey);
+                decrypt(input, output, devMode, overwrite, Main.titleKey);
 
                 return;
             } else if (cmd.hasOption(OPTION_DECRYPT_FILE)) {
                 String regex = cmd.getOptionValue(OPTION_DECRYPT_FILE);
                 System.out.println("Decrypting files matching \"" + regex + "\"");
 
-                decryptFile(input, output, regex, devMode, overwrite, titlekey);
+                decryptFile(input, output, regex, devMode, overwrite, Main.titleKey);
 
                 return;
             } else if (cmd.hasOption(OPTION_EXTRACT)) {
@@ -169,7 +172,7 @@ public class Main {
                 if (arg == null) {
                     arg = "all";
                 }
-                extract(input, output, devMode, overwrite, titlekey, arg);
+                extract(input, output, devMode, overwrite, Main.titleKey, arg);
 
                 return;
             }
@@ -395,4 +398,10 @@ public class Main {
         formatter.printHelp(" ", options);
     }
 
+
+    private static File deriveTitleKeyFromInput(String input) {
+        int i = input.lastIndexOf('.');
+        input = input.substring(0, i);
+        return new File(input + ".key");
+    }
 }
