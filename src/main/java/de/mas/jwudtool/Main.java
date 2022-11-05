@@ -49,7 +49,7 @@ public class Main {
     private static final String HOMEPATH = System.getProperty("user.home") + File.separator + ".wiiu";
 
     public static void main(String[] args) throws Exception {
-        System.out.println("JWUDTool 0.4 - Maschell");
+        System.out.println("JWUDTool 0.6 - Maschell feat. FabulosoDev");
         System.out.println();
         Options options = getOptions();
 
