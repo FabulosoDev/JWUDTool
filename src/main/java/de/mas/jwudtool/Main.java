@@ -34,7 +34,7 @@ public class Main {
     private static final String OPTION_OUT = "out";
     private static final String OPTION_DECOMPRESS = "decompress";
     private static final String OPTION_COMPRESS = "compress";
-    private static final String OPTION_COMMON_KEY = "commonkey";
+    private static final String OPTION_COMMON_KEY = "commonKey";
     private static final String OPTION_NO_VERIFY = "noVerify";
     private static final String OPTION_VERIFY = "verify";
     private static final String OPTION_OVERWRITE = "overwrite";
@@ -91,6 +91,7 @@ public class Main {
         if (cmd.hasOption(OPTION_IN)) {
             input = cmd.getOptionValue(OPTION_IN);
         }
+
         if (cmd.hasOption(OPTION_OUT)) {
             output = cmd.getOptionValue(OPTION_OUT);
         }
@@ -102,6 +103,8 @@ public class Main {
                 Main.commonKey = key;
                 System.out.println("Commonkey was set to: " + Utils.ByteArrayToString(key));
             }
+        } else {
+            System.out.println("CommonKey was set to: " + Utils.ByteArrayToString(Main.commonKey));
         }
 
         if (cmd.hasOption(OPTION_TITLEKEY)) {
