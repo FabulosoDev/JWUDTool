@@ -72,7 +72,7 @@ public class Main {
         }
 
         String input = null;
-        String output = null;
+        String outputDirectory = null;
         boolean overwrite = false;
         boolean devMode = false;
 
@@ -93,7 +93,10 @@ public class Main {
         }
 
         if (cmd.hasOption(OPTION_OUT)) {
-            output = cmd.getOptionValue(OPTION_OUT);
+            outputDirectory = cmd.getOptionValue(OPTION_OUT);
+        } else
+        if (input != null) {
+            outputDirectory = new File(input).getParent();
         }
 
         if (cmd.hasOption(OPTION_COMMON_KEY)) {
@@ -116,7 +119,7 @@ public class Main {
                 System.out.println("TitleKey was set to: " + Utils.ByteArrayToString(Main.titleKey));
             }
         } else {
-            readKey(deriveTitleKeyFromInput(input)).ifPresent(key -> Main.titleKey = key);
+            readKey(new File(replaceFileExtension(input, ".key"))).ifPresent(key -> Main.titleKey = key);
             System.out.println("TitleKey was set to: " + Utils.ByteArrayToString(Main.titleKey));
         }
 
@@ -131,7 +134,8 @@ public class Main {
                 System.out.println("Verification disabled.");
                 verify = false;
             }
-            compressDecompressWUD(input, output, verify, overwrite, false);
+            String outputFilename = replaceFileExtension(new File(input).getName(), ".wux");
+            compressDecompressWUD(input, outputDirectory, outputFilename, verify, overwrite, false);
             return;
         } else if (cmd.hasOption(OPTION_DECOMPRESS)) {
             boolean verify = true;
@@ -140,7 +144,8 @@ public class Main {
                 System.out.println("Verification disabled.");
                 verify = false;
             }
-            compressDecompressWUD(input, output, verify, overwrite, true);
+            String outputFilename = replaceFileExtension(new File(input).getName(), ".wud");
+            compressDecompressWUD(input, outputDirectory, outputFilename, verify, overwrite, true);
             return;
         } else if (cmd.hasOption(OPTION_VERIFY)) {
             System.out.println("Comparing images.");
@@ -156,14 +161,14 @@ public class Main {
             if (cmd.hasOption(OPTION_DECRYPT)) {
                 System.out.println("Decrypting full game partition.");
 
-                decrypt(input, output, devMode, overwrite, Main.titleKey);
+                decrypt(input, outputDirectory, devMode, overwrite, Main.titleKey);
 
                 return;
             } else if (cmd.hasOption(OPTION_DECRYPT_FILE)) {
                 String regex = cmd.getOptionValue(OPTION_DECRYPT_FILE);
                 System.out.println("Decrypting files matching \"" + regex + "\"");
 
-                decryptFile(input, output, regex, devMode, overwrite, Main.titleKey);
+                decryptFile(input, outputDirectory, regex, devMode, overwrite, Main.titleKey);
 
                 return;
             } else if (cmd.hasOption(OPTION_EXTRACT)) {
@@ -172,7 +177,7 @@ public class Main {
                 if (arg == null) {
                     arg = "all";
                 }
-                extract(input, output, devMode, overwrite, Main.titleKey, arg);
+                extract(input, outputDirectory, devMode, overwrite, Main.titleKey, arg);
 
                 return;
             }
@@ -313,7 +318,7 @@ public class Main {
         }
     }
 
-    private static void compressDecompressWUD(String input, String output, boolean verify, boolean overwrite, boolean decompress) throws IOException {
+    private static void compressDecompressWUD(String input, String outputDirectory, String outputFilename, boolean verify, boolean overwrite, boolean decompress) throws IOException {
         if (input == null) {
             System.out.println("-" + OPTION_IN + " was null");
             return;
@@ -327,12 +332,12 @@ public class Main {
         WUDImage image = new WUDImage(inputImage);
         Optional<File> outputFile;
         if (!decompress) {
-            outputFile = WUDService.compressWUDToWUX(image, output, overwrite);
+            outputFile = WUDService.compressWUDToWUX(image, outputDirectory, outputFilename, overwrite, Optional.empty());
             if (outputFile.isPresent()) {
                 System.out.println("Compression successful!");
             }
         } else {
-            outputFile = WUDService.decompressWUX(image, output, overwrite);
+            outputFile = WUDService.decompressWUX(image, outputDirectory, outputFilename, overwrite);
             if (outputFile.isPresent()) {
                 System.out.println("Decompression successful!");
             }
@@ -399,9 +404,9 @@ public class Main {
     }
 
 
-    private static File deriveTitleKeyFromInput(String input) {
+    private static String replaceFileExtension(String input, String extension) {
         int i = input.lastIndexOf('.');
         input = input.substring(0, i);
-        return new File(input + ".key");
+        return input + extension;
     }
 }
